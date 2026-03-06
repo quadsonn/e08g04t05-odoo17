@@ -88,6 +88,8 @@ stages:
                 git clone -b master $(repoUrl) --quiet
                 mv odoo17 deploy-temp
                 cd deploy-temp
+                pwd
+                ls
                 rm -f .DS_Store
                 rm -rf .github
 
@@ -99,6 +101,8 @@ stages:
               runOptions: commands
               commands: |
                 set -e
+                pwd
+                ls
                 cd $(stagePath)/deploy-temp
                 echo "Uncompressing odoo.sql.gz..."
                 gunzip -c odoo.sql.gz > odoo.sql
@@ -112,7 +116,7 @@ stages:
               runOptions: commands
               commands: |
                 set -e
-                cd $(stagePath)/deploy-temp
+                pwd
                 ls -l
                 echo "$(STAGINGUSERPASSWORD)" | sudo -S -p '' chmod +x $(restoreDBscript)
                 echo "$(DB_PASSWORD)" | sudo -S -p '' $(restoreDBscript) \
