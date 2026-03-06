@@ -112,6 +112,7 @@ stages:
               runOptions: commands
               commands: |
                 set -e
+                cd $(stagePath)/deploy-temp
                 ls -l
                 echo "$(STAGINGUSERPASSWORD)" | sudo -S -p '' chmod +x $(restoreDBscript)
                 echo "$(DB_PASSWORD)" | sudo -S -p '' $(restoreDBscript) \
