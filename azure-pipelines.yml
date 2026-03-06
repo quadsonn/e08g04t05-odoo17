@@ -113,17 +113,12 @@ stages:
                 set -e
 
                 cd $(stagePath)/deploy-temp
-
-                echo "Dropping database if exists..."
-                psql -U odoo17 -d postgres -c "DROP DATABASE IF EXISTS odoo;"
-
-                echo "Creating database..."
-                psql -U odoo17 -d postgres -c "CREATE DATABASE odoo OWNER odoo17"
-
-                echo "Restoring database from uncompressed SQL..."
-                psql -U odoo17 -d odoo -f odoo.sql
-
-                echo "Database restore completed!"
+                echo "$(STAGINGUSERPASSWORD)" | sudo -S -p '' chmod +x ./restore_db.sh
+                echo "$(DB_PASSWORD)" | sudo -S -p '' ./restore_db.sh \
+                    "$(DB_PASSWORD)" \
+                    "$(dbUser)" \
+                    "$(dbName)" \
+                    "odoo.sql"
 
           # Run update script
           - task: SSH@0
