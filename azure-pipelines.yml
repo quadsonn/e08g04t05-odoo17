@@ -118,7 +118,7 @@ stages:
                 psql -U odoo17 -d postgres -c "DROP DATABASE IF EXISTS odoo;"
 
                 echo "Creating database..."
-                psql -U odoo17 -d postgres -c "CREATE DATABASE $dbName OWNER odoo17"
+                psql -U odoo17 -d postgres -c "CREATE DATABASE odoo OWNER odoo17"
 
                 echo "Restoring database from uncompressed SQL..."
                 psql -U odoo17 -d odoo -f odoo.sql
