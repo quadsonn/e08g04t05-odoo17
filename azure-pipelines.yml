@@ -33,7 +33,7 @@ stages:
           - task: SSH@0
             displayName: "Sync Code - Staging"
             inputs:
-              sshEndpoint: 'ssh-odoo17'
+              sshEndpoint: 'ssh-odoo17-staging'
               runOptions: commands
               commands: |
                 set -e
@@ -97,7 +97,7 @@ stages:
           - task: SSH@0
             displayName: "Uncompress odoo.sql.gz on VM"
             inputs:
-              sshEndpoint: 'ssh-odoo17-production'
+              sshEndpoint: 'ssh-odoo17-prod'
               runOptions: commands
               commands: |
                 set -e
