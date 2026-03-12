@@ -110,7 +110,7 @@ stages:
           - task: SSH@0
             displayName: "Restore Database"
             inputs:
-              sshEndpoint: 'ssh-odoo17-production'
+              sshEndpoint: 'ssh-odoo17-prod'
               runOptions: commands
               commands: |
                 set -e
