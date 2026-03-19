@@ -1,137 +1,3 @@
-# trigger:
-#   branches:
-#     include:
-#       - Staging
-#       - master
-
-# pool:
-#   name: Default
-
-# variables:
-#   repoUrl: 'https://github.com/quadsonn/e08g04t05-odoo17.git'
-#   updateScript: '/home/is214/deploy-temp/update_code.sh'
-#   stagePath: '/home/is214/'
-
-# stages:
-
-# # =========================
-# # STAGING STAGE
-# # =========================
-# - stage: Staging
-#   displayName: Deploy to Staging
-#   condition: eq(variables['Build.SourceBranchName'], 'Staging')
-
-#   jobs:
-#   - deployment: DeployStaging
-#     environment: Staging
-#     strategy:
-#       runOnce:
-#         deploy:
-#           steps:
-
-#           # Sync code
-#           - task: SSH@0
-#             displayName: "Sync Code - Staging"
-#             inputs:
-#               sshEndpoint: 'ssh-odoo17-staging'
-#               runOptions: commands
-#               commands: |
-#                 set -e
-#                 echo "Deploying branch: $(Build.SourceBranchName)"
-#                 cd $(stagePath)
-#                 rm -rf deploy-temp *-odoo17
-
-#                 git clone -b Staging $(repoUrl) --quiet
-#                 mv *-odoo17 deploy-temp
-
-#                 cd deploy-temp
-#                 rm -f .DS_Store
-#                 rm -rf .github
-
-#           # Run update script
-#           - task: SSH@0
-#             displayName: "Run Update Script - Staging"
-#             inputs:
-#               sshEndpoint: 'ssh-odoo17-staging'
-#               runOptions: commands
-#               commands: |
-#                 echo "$(STAGINGUSERPASSWORD)" | sudo -S -p '' chmod +x $(updateScript)
-#                 echo "$(STAGINGUSERPASSWORD)" | sudo -S -p '' $(updateScript)
-
-
-# # =========================
-# # PRODUCTION STAGE
-# # =========================
-# - stage: Production
-#   displayName: Deploy to Production
-#   condition: eq(variables['Build.SourceBranchName'], 'master')
-
-#   jobs:
-#   - deployment: DeployProduction
-#     environment: Production
-#     strategy:
-#       runOnce:
-#         deploy:
-#           steps:
-
-#           # Sync code
-#           - task: SSH@0
-#             displayName: "Sync Code - Production"
-#             inputs:
-#               sshEndpoint: 'ssh-odoo17-prod'
-#               runOptions: commands
-#               commands: |
-#                 set -e
-#                 echo "Deploying branch: $(Build.SourceBranchName)"
-#                 cd $(stagePath)
-#                 rm -rf deploy-temp *-odoo17
-
-#                 git clone -b master $(repoUrl) --quiet
-#                 mv *-odoo17 deploy-temp
-
-#                 cd deploy-temp
-#                 rm -f .DS_Store
-#                 rm -rf .github
-
-#           # Uncompress SQL on VM
-#           - task: SSH@0
-#             displayName: "Uncompress odoo.sql.gz on VM"
-#             inputs:
-#               sshEndpoint: 'ssh-odoo17-prod'
-#               runOptions: commands
-#               commands: |
-#                 set -e
-#                 cd $(stagePath)/deploy-temp/
-#                 echo "Uncompressing odoo.sql.gz..."
-#                 gunzip -c $(tempDeploy)/odoo.sql.gz > $(tempDeploy)/odoo.sql
-#                 echo "Uncompress complete: $(stagePath)/deploy-temp/odoo.sql"
-
-#           # Restore Database
-#           - task: SSH@0
-#             displayName: "Restore Database"
-#             inputs:
-#               sshEndpoint: 'ssh-odoo17-prod'
-#               runOptions: commands
-#               commands: |
-#                 set -e
-#                 echo "$(STAGINGUSERPASSWORD)" | sudo -S -p '' cp /home/azureuser/deploy-temp/restore_db.sh /tmp/
-#                 echo "$(STAGINGUSERPASSWORD)" | sudo -S -p '' cp /home/azureuser/deploy-temp/odoo.sql /tmp/
-
-#                 echo "$(STAGINGUSERPASSWORD)" | sudo -S -p '' chmod +x /tmp/restore_db.sh
-#                 echo "$(STAGINGUSERPASSWORD)" | sudo -S -p '' chmod 644 /tmp/odoo.sql
-
-#                 echo "$(STAGINGUSERPASSWORD)" | sudo -S -p '' -u postgres /tmp/restore_db.sh "odoo17" "odoo" "/tmp/odoo.sql"
-
-#           # Run update script
-#           - task: SSH@0
-#             displayName: "Run Update Script - Production"
-#             inputs:
-#               sshEndpoint: 'ssh-odoo17-prod'
-#               runOptions: commands
-#               commands: |
-#                 echo "$(STAGINGUSERPASSWORD)" | sudo -S -p '' chmod +x $(updateScript)
-#                 echo "$(STAGINGUSERPASSWORD)" | sudo -S -p '' $(updateScript)
-
 trigger:
   branches:
     include:
@@ -139,13 +5,12 @@ trigger:
       - master
 
 pool:
-  name: Default
+  name: ESM
 
 variables:
   repoUrl: 'https://github.com/quadsonn/e08g04t05-odoo17.git'
-  stagePath: '/home/is214'
-  tempDeploy: '/home/is214/deploy-temp'
   updateScript: '/home/is214/deploy-temp/update_code.sh'
+  stagePath: '/home/is214/'
 
 stages:
 
@@ -154,7 +19,7 @@ stages:
 # =========================
 - stage: Staging
   displayName: Deploy to Staging
-  condition: and(not(canceled()), eq(variables['Build.SourceBranchName'], 'Staging'))
+  condition: eq(variables['Build.SourceBranchName'], 'Staging')
 
   jobs:
   - deployment: DeployStaging
@@ -164,6 +29,7 @@ stages:
         deploy:
           steps:
 
+          # Sync code
           - task: SSH@0
             displayName: "Sync Code - Staging"
             inputs:
@@ -178,26 +44,27 @@ stages:
                 git clone -b Staging $(repoUrl) --quiet
                 mv *-odoo17 deploy-temp
 
-                cd $(tempDeploy)
+                cd deploy-temp
                 rm -f .DS_Store
                 rm -rf .github
 
+          # Run update script
           - task: SSH@0
             displayName: "Run Update Script - Staging"
             inputs:
               sshEndpoint: 'ssh-odoo17-staging'
               runOptions: commands
               commands: |
-                set -e
                 echo "$(STAGINGUSERPASSWORD)" | sudo -S -p '' chmod +x $(updateScript)
                 echo "$(STAGINGUSERPASSWORD)" | sudo -S -p '' $(updateScript)
+
 
 # =========================
 # PRODUCTION STAGE
 # =========================
 - stage: Production
   displayName: Deploy to Production
-  condition: and(not(canceled()), eq(variables['Build.SourceBranchName'], 'master'))
+  condition: eq(variables['Build.SourceBranchName'], 'master')
 
   jobs:
   - deployment: DeployProduction
@@ -207,6 +74,7 @@ stages:
         deploy:
           steps:
 
+          # Sync code
           - task: SSH@0
             displayName: "Sync Code - Production"
             inputs:
@@ -221,10 +89,11 @@ stages:
                 git clone -b master $(repoUrl) --quiet
                 mv *-odoo17 deploy-temp
 
-                cd $(tempDeploy)
+                cd deploy-temp
                 rm -f .DS_Store
                 rm -rf .github
 
+          # Uncompress SQL on VM
           - task: SSH@0
             displayName: "Uncompress odoo.sql.gz on VM"
             inputs:
@@ -232,11 +101,12 @@ stages:
               runOptions: commands
               commands: |
                 set -e
-                cd $(tempDeploy)
+                cd $(stagePath)/deploy-temp/
                 echo "Uncompressing odoo.sql.gz..."
                 gunzip -c $(tempDeploy)/odoo.sql.gz > $(tempDeploy)/odoo.sql
-                echo "Uncompress complete: $(tempDeploy)/odoo.sql"
+                echo "Uncompress complete: $(stagePath)/deploy-temp/odoo.sql"
 
+          # Restore Database
           - task: SSH@0
             displayName: "Restore Database"
             inputs:
@@ -244,20 +114,20 @@ stages:
               runOptions: commands
               commands: |
                 set -e
-                echo "$(PRODUSERPASSWORD)" | sudo -S -p '' cp $(tempDeploy)/restore_db.sh /tmp/
-                echo "$(PRODUSERPASSWORD)" | sudo -S -p '' cp $(tempDeploy)/odoo.sql /tmp/
+                echo "$(STAGINGUSERPASSWORD)" | sudo -S -p '' cp /home/is214/deploy-temp/restore_db.sh /tmp/
+                echo "$(STAGINGUSERPASSWORD)" | sudo -S -p '' cp /home/is214/deploy-temp/odoo.sql /tmp/
 
-                echo "$(PRODUSERPASSWORD)" | sudo -S -p '' chmod +x /tmp/restore_db.sh
-                echo "$(PRODUSERPASSWORD)" | sudo -S -p '' chmod 644 /tmp/odoo.sql
+                echo "$(STAGINGUSERPASSWORD)" | sudo -S -p '' chmod +x /tmp/restore_db.sh
+                echo "$(STAGINGUSERPASSWORD)" | sudo -S -p '' chmod 644 /tmp/odoo.sql
 
-                echo "$(PRODUSERPASSWORD)" | sudo -S -p '' -u postgres /tmp/restore_db.sh "odoo17" "odoo" "/tmp/odoo.sql"
+                echo "$(STAGINGUSERPASSWORD)" | sudo -S -p '' -u postgres /tmp/restore_db.sh "odoo17" "odoo" "/tmp/odoo.sql"
 
+          # Run update script
           - task: SSH@0
             displayName: "Run Update Script - Production"
             inputs:
               sshEndpoint: 'ssh-odoo17-prod'
               runOptions: commands
               commands: |
-                set -e
-                echo "$(PRODUSERPASSWORD)" | sudo -S -p '' chmod +x $(updateScript)
-                echo "$(PRODUSERPASSWORD)" | sudo -S -p '' $(updateScript)
+                echo "$(STAGINGUSERPASSWORD)" | sudo -S -p '' chmod +x $(updateScript)
+                echo "$(STAGINGUSERPASSWORD)" | sudo -S -p '' $(updateScript)
